@@ -39,5 +39,5 @@ class Constants:
     }
 
     ## CONSTANTS
-    EMBEDDING_DIM = 300
+    GLOVE_EMBEDDING_DIM = 300
     
