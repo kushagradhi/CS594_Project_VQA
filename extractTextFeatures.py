@@ -87,7 +87,7 @@ class QuestionFeatures:
 
 
 '''
-returns dictionary with answer_id, question_id, most_frequent_answer (each is a list) 
+returns dictionary with question_id, most_frequent_answer (each is a list) 
 '''
 def getAnnotations(json_filename, save=False):
     with open (json_filename, 'r') as fr:
