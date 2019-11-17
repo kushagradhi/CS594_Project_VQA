@@ -1,4 +1,4 @@
-#from os import path
+import os
 
 
 class Constants:
@@ -40,4 +40,7 @@ class Constants:
 
     ## CONSTANTS
     GLOVE_EMBEDDING_DIM = 300
+    
+    ## Number of top answers to keep
+    NUM_CLASSES = 1000
     

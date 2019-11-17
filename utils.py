@@ -1,6 +1,7 @@
 from collections import defaultdict
+from constants import Constants
 
-def get_n_frequent_answers(answers, to_keep=1000):
+def get_n_frequent_answers(answers, to_keep=Constants.NUM_CLASSES):
     '''
     truncates the answers dict to retain only the top to_keep answers, 
     returns rebuilt dictionary with question_id, multiple_choice_answer (both lists)
@@ -16,6 +17,21 @@ def get_n_frequent_answers(answers, to_keep=1000):
             new_answers["multiple_choice_answer"].append(answers["multiple_choice_answer"][i])
     return new_answers
 
-
+def prepare_Ximage_and_y(images, questions, answers, start, stop):
+    #images={"image_id":[], "features":[]}
+    #questions={"image_id":[], "question_id":[], "question":[]}
+    #answers = {question_id":[], "multiple_choice_answer":[]}
     
+    X_image_features = []
+    y = []
+    for i in range(start, stop):
+        image_index = images["image_id"]
+        X_image_features.append(images["features"][image_index])   
+             
+        y_encoding = [0] * Constants.NUM_CLASSES
+        y_encoding[ answers["multiple_choice_answer"].index(answers["multiple_choice_answer"][i]) + 1 ] = 1
+        y.append(y_encoding)
+
+    return X_image_features, y
+
 
