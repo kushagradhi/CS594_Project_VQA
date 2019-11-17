@@ -11,8 +11,8 @@ class Constants:
 
     '''
     DIRECTORIES = {
-        "root": "D:\\CS\\DLNLP_Project\\data",
-        #"root": "C:\SIM\MS CS\CS594_Deep_learning_in_NLP\Project\Run\data",
+        #"root": "D:\\CS\\DLNLP_Project\\data",
+        "root": "C:\SIM\MS CS\CS594_Deep_learning_in_NLP\Project\Run\data",
         
         ## Word Embeddings - Glove
         "glove_300": "glove.6B\\glove.6B.300d.txt",

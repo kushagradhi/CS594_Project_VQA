@@ -56,9 +56,9 @@ class VQA():
         input_lang = Input(shape=(question_len,))
         output_embedding = Embedding(vocab_size, embedding_matrix.shape[1], input_length=question_len,
                                         weights=[embedding_matrix], trainable=False)(input_lang)
-        output_lstm_1 = LSTM(units=hidden_units, return_sequences=True, unroll=True)(output_embedding)
-        output_lstm_2 = LSTM(units=hidden_units, return_sequences=True, unroll=True)(output_lstm_1)
-        output_lstm_3 = LSTM(units=hidden_units, return_sequences=False, unroll=True)(output_lstm_2)
+        #output_lstm_1 = LSTM(units=hidden_units, return_sequences=True, unroll=True)(output_embedding)
+        #output_lstm_2 = LSTM(units=hidden_units, return_sequences=True, unroll=True)(output_lstm_1)
+        output_lstm_3 = LSTM(units=hidden_units, return_sequences=False, unroll=True)(output_embedding)
 
 
         # combined model

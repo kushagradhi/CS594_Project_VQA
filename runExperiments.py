@@ -11,16 +11,17 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from keras.preprocessing.text import Tokenizer
 from utils import read_answers, get_n_frequent_answers
+from keras.models import load_model
 
 
-def main():
+def main(fname=None):
     tf.logging.set_verbosity(tf.logging.FATAL)
     epochs = 1
-    batch_size = 100
+    batch_size = 1000
 
     # load image features
-    #image_file_training = "C:\SIM\MS CS\CS594_Deep_learning_in_NLP\Project\Run\data\img_features\\imgfeature_1000_final.pkl"
-    image_file_training = "D:\\CS\\DLNLP_Project\\data\\img_features\\imgfeature_1000_final.pkl"
+    image_file_training = "C:\SIM\MS CS\CS594_Deep_learning_in_NLP\Project\Run\data\img_features\\imgfeature_1000_final.pkl"
+    #image_file_training = "D:\\CS\\DLNLP_Project\\data\\img_features\\imgfeature_1000_final.pkl"
     with open(image_file_training, 'rb') as f:
         image_features = pickle.load(f)
 
@@ -38,9 +39,15 @@ def main():
     print(f'ans={len(train_answers["multiple_choice_answer"])}')
     num_traning_ex = len(top_train_answers["multiple_choice_answer"])
     num_batches = int(num_traning_ex / batch_size) +1
+    #num_batches=2
     print(f'len_top_100={len(top_answers)}, num_train_ex={len(top_train_answers["multiple_choice_answer"])}, num_batches={num_batches}')
     
-    model = VQA().get_model_functional(embedding_matrix=word_embeddings, vocab_size=textObj.get_vocab_size())
+    if fname==None:
+        model = VQA().get_model_functional(embedding_matrix=word_embeddings, vocab_size=textObj.get_vocab_size())
+    else:
+        model=load_saved_model(fname)
+        loadedmodel='M'+fname.replace('.h5','').replace('model_','') + '_'
+        print("Model loaded")
     
     #data description! ):
     #image_features={"image_id":[], "features":[]}
@@ -72,9 +79,20 @@ def main():
             X_text=textObj.tokenize(X_text)
             loss = model.train_on_batch([X_image, X_text], y)
         print("Completed training for epoch " + str(epoch) + "\n\n")
+        save_model_name=loadedmodel + 'model_' + str(epoch) +'.h5'
+        model.save(save_model_name)
+        print("Model saved for epoch: " + str(epoch))
+    model.save("final_model.h5")
+
+
+def load_saved_model(fname):
+    m=load_model(fname)
+    return m
 
 if __name__ == "__main__":
-    main()
+    ## Parameter fname, if not specified training starts from scratch, otherwise it starts over the given the file
+    #fname='model_0.h5'
+    main(fname=None)
 
         
 
