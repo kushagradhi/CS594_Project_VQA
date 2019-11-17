@@ -1,6 +1,6 @@
 from keras.models import Sequential, Model
 from keras.layers.core import Reshape, Activation, Dropout
-from keras.layers import LSTM, Dense, Embedding, Input, Concatenate
+from keras.layers import LSTM, Dense, Embedding, Input, Concatenate, Flatten
 from keras.layers.merge import concatenate
 from constants import Constants
 import tensorflow as tf
@@ -73,9 +73,9 @@ class VQA():
                 dense_layers.append(Dense(number_of_hidden_units, kernel_initializer='uniform')(dropout_layers[-1]))
             activation_layers.append(Activation(activation_function)(dense_layers[i]))
             dropout_layers.append(Dropout(dropout_pct)(activation_layers[i]))
-
-        final_dense = Dense(Constants.NUM_CLASSES)(dropout_layers[-1])
-        output_final = Activation('softmax')(final_dense)
-        model = Model(inputs=[input_image, input_lang], outputs=output_final)
-        model.compile(loss=tf.keras.losses.CategoricalCrossentropy(), optimizer="rmsprop") # metrics=['accuracy']        
+        
+        final_dense = Dense(Constants.NUM_CLASSES, activation="softmax")(dropout_layers[-1])
+        model = Model(inputs=[input_image, input_lang], outputs=final_dense)
+        model.compile(loss="categorical_crossentropy", optimizer="rmsprop") # metrics=['accuracy']   tf.keras.losses.CategoricalCrossentropy()
+        # model.summary()     
         return model
