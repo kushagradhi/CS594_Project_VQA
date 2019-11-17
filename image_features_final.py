@@ -61,7 +61,8 @@ class image_features:
             bn=0
             for k in range(i*batch_size,min((i+1)*batch_size,n)):
                 img_path=os.path.join(data_directory, fname[k])
-                f=str(int(fname[k][-7:]))
+                f=fname[k].replace('.jpg','')
+                f=int(f[-7:])
                 imgname[f]=k
                 img = image.load_img(img_path, target_size=(224, 224))
                 img = image.img_to_array(img)
@@ -76,7 +77,8 @@ class image_features:
                     print(str(k) + " Done")
             start = time.time()        
             print("Predicting now at " + str(start))
-            
+            if n < (i+1)*batch_size:
+                batch=batch[0:bn]
             features[i * batch_size : min((i + 1) * batch_size,n), :] = mod.predict(batch)
             end=round(time.time() - start,1)
             print("Prediction done in " + str(end))
