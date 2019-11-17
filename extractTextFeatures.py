@@ -38,6 +38,9 @@ class QuestionFeatures:
         self.word_index = self.tokenizer.word_index
         self.vocab_size = len(self.word_index) + 1
         print('Found %s unique tokens ' % len(self.word_index))
+    
+    def get_vocab_size(self):
+        return self.vocab_size
 
     def save_tokenizer(self, filename):
         # filename = os.path.join(Constants.DIRECTORIES["root"], filename)
