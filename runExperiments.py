@@ -50,7 +50,7 @@ def main():
         for batch in range(0,num_batches):
             start_index = batch*batch_size
             stop_index = min(num_traning_ex, (batch+1)*batch_size)
-            X_image, X_text, y = [], [], []
+            X_image, X_text, y = [], [], np.ndarray(shape=(batch_size, Constants.NUM_CLASSES))
             print(f'Training batch {batch} from {start_index}:{stop_index}')
             for i in range(start_index, stop_index):
                 q_id = int(top_question_ids[i])
@@ -65,7 +65,8 @@ def main():
                 a_index = top_train_answers["question_id"].index(str(q_id))
                 class_i = top_answers.index(top_train_answers["multiple_choice_answer"][a_index])
                 y_i[class_i] = 1
-                y.append(y_i)
+                y[i-start_index] = y_i
+                # y.append(y_i)
             
             X_text=textObj.tokenize(X_text)
             loss = model.train_on_batch([X_image, X_text], y)

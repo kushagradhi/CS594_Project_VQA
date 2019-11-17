@@ -66,7 +66,7 @@ class VQA():
 
         dense_layers, activation_layers, dropout_layers = [], [], []
 
-        for i in range(number_of_dense_layers-1):
+        for i in range(number_of_dense_layers):
             if i is 0:
                 dense_layers.append(Dense(number_of_hidden_units, kernel_initializer='uniform')(merged))
             else:
@@ -77,6 +77,5 @@ class VQA():
         final_dense = Dense(Constants.NUM_CLASSES)(dropout_layers[-1])
         output_final = Activation('softmax')(final_dense)
         model = Model(inputs=[input_image, input_lang], outputs=output_final)
-        model.compile(loss=tf.keras.losses.BinaryCrossentropy(), optimizer="rmsprop", 
-                        metrics=['accuracy'])        
+        model.compile(loss=tf.keras.losses.CategoricalCrossentropy(), optimizer="rmsprop") # metrics=['accuracy']        
         return model
