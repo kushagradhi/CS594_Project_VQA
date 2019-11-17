@@ -83,7 +83,7 @@ class image_features:
             end=round(time.time() - start,1)
             print("Prediction done in " + str(end))
             print(features[i * batch_size : min((i + 1) * batch_size,n), :])
-            s='imgfeature' + str(batch_size) + '_' + str(i) +'.pkl'
+            s='imgfeature_' + str(filename) + str(batch_size) + '_' + str(i) +'.pkl'
             pickle.dump([imgname,features],open(s,'wb'))
                 
         #print(features)
