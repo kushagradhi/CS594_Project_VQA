@@ -67,8 +67,8 @@ def main():
                 y_i[class_i] = 1
                 y.append(y_i)
             
-            textObj.tokenize(X_text)
-            loss = model.train_on_batch([X_text, X_image], y)
+            X_text=textObj.tokenize(X_text)
+            loss = model.train_on_batch([X_image, X_text], y)
         print("Completed training for epoch " + str(epoch) + "\n\n")
 
 if __name__ == "__main__":
