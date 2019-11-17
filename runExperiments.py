@@ -32,7 +32,7 @@ def main():
     top_train_answers, top_answers = get_n_frequent_answers(train_answers)  # has the questions with answers in the top 1000 only
     top_question_ids = list(top_train_answers.keys())
 
-    num_traning_ex = len(top_train_answers)
+    num_traning_ex = len(top_train_answers["multiple_choice_answer"])
     num_batches = int(num_traning_ex / batch_size) +1
     print(f'num_train_ex={num_traning_ex}, num_batches={num_batches}')
     
