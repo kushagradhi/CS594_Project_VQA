@@ -41,7 +41,7 @@ def main(fname=None):
     num_batches = int(num_traning_ex / batch_size) +1
     #num_batches=2
     print(f'len_top_100={len(top_answers)}, num_train_ex={len(top_train_answers["multiple_choice_answer"])}, num_batches={num_batches}')
-    
+    loadedmodel=""
     if fname==None:
         model = VQA().get_model_functional(embedding_matrix=word_embeddings, vocab_size=textObj.get_vocab_size())
     else:
@@ -58,7 +58,10 @@ def main(fname=None):
         for batch in range(0,num_batches):
             start_index = batch*batch_size
             stop_index = min(num_traning_ex, (batch+1)*batch_size)
-            X_image, X_text, y = [], [], np.ndarray(shape=(batch_size, Constants.NUM_CLASSES))
+            if stop_index-start_index < batch_size:
+                X_image, X_text, y = [], [], np.ndarray(shape=(stop_index-start_index, Constants.NUM_CLASSES))
+            else:
+                X_image, X_text, y = [], [], np.ndarray(shape=(batch_size, Constants.NUM_CLASSES))
             print(f'Training batch {batch} from {start_index}:{stop_index}')
             for i in range(start_index, stop_index):
                 q_id = int(top_question_ids[i])
