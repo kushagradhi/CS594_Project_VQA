@@ -34,8 +34,9 @@ def main():
 
     num_traning_ex = len(top_train_answers)
     num_batches = int(num_traning_ex / batch_size) +1
+    print(f'num_train_ex={num_traning_ex}, num_batches={num_batches}')
     
-    model = VQA().get_model(embedding_matrix=word_embeddings, vocab_size=textObj.get_vocab_size())
+    model = VQA().get_model_functional(embedding_matrix=word_embeddings, vocab_size=textObj.get_vocab_size())
     
     #data description! ):
     #images={"image_id":[], "features":[]}
