@@ -19,6 +19,7 @@ def main():
     batch_size = 100
 
     # load image features
+    #image_file_training = "C:\SIM\MS CS\CS594_Deep_learning_in_NLP\Project\Run\data\img_features\\imgfeature_1000_final.pkl"
     image_file_training = "D:\\CS\\DLNLP_Project\\data\\img_features\\imgfeature_1000_final.pkl"
     with open(image_file_training, 'rb') as f:
         image_features = pickle.load(f)
