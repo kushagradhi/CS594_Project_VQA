@@ -11,12 +11,16 @@ def get_n_frequent_answers(answers, to_keep=Constants.NUM_CLASSES):
     answers_counts = defaultdict(int)
     for answer in answers["multiple_choice_answer"]:
         answers_counts[answer] += 1
-    top_answers = [a for a, v in sorted(answers_counts.items(), key=lambda x: x[1])][:to_keep]
+    top_answers = [a for a, v in sorted(answers_counts.items(), key=lambda x: x[1], reverse=True)][:to_keep]
+    # print(answers_counts)
+    # print(top_answers)
     new_answers={"question_id":[], "multiple_choice_answer":[]}
-    for i in range(len(answers["question_id"])):
+    for i in range(len(answers["multiple_choice_answer"])):
         if answers["multiple_choice_answer"][i] in top_answers:
             new_answers["question_id"].append(answers["question_id"][i])
             new_answers["multiple_choice_answer"].append(answers["multiple_choice_answer"][i])
+
+    print(f'nfq ta={len(top_answers)} top_old={len(answers["multiple_choice_answer"])} top_new={len(new_answers["multiple_choice_answer"])}')
     return new_answers, top_answers
 
 # def prepare_Ximage_and_y(images, questions, answers, start, stop):
