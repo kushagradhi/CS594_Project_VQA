@@ -5,6 +5,7 @@ from keras.preprocessing.text import Tokenizer
 from utils import read_answers, get_n_frequent_answers
 import pickle, os
 import numpy as np
+from keras.models import load_model
 
 
 def load_saved_model(fname):
