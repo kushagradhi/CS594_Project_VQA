@@ -69,7 +69,7 @@ def prediction(fname=None,model=None):
             #    break
                 # y.append(y_i)
     print('Number of questions: ' + str(i))
-    y=y[0:i+1]        
+    y=y[0:i]        
     X_text=textObj.tokenize(X_text)
     print("Running prediction:")
     sol = model.predict([X_image, X_text])
