@@ -76,6 +76,6 @@ class VQA():
         
         final_dense = Dense(Constants.NUM_CLASSES, activation="softmax")(dropout_layers[-1])
         model = Model(inputs=[input_image, input_lang], outputs=final_dense)
-        model.compile(loss="categorical_crossentropy", optimizer="rmsprop") # metrics=['accuracy']   tf.keras.losses.CategoricalCrossentropy()
+        model.compile(loss="categorical_crossentropy", optimizer="rmsprop" , metrics=['accuracy'] )#   tf.keras.losses.CategoricalCrossentropy()
         # model.summary()     
         return model

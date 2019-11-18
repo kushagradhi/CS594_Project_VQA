@@ -12,6 +12,7 @@ from tensorflow.keras import layers
 from keras.preprocessing.text import Tokenizer
 from utils import read_answers, get_n_frequent_answers
 from keras.models import load_model
+from modelpredict import prediction
 
 
 def main(fname=None):
@@ -22,6 +23,7 @@ def main(fname=None):
     # load image features
     image_file_training = "C:\SIM\MS CS\CS594_Deep_learning_in_NLP\Project\Run\data\img_features\\imgfeature_1000_final.pkl"
     #image_file_training = "D:\\CS\\DLNLP_Project\\data\\img_features\\imgfeature_1000_final.pkl"
+    #image_file_training = "drive/My Drive/Colab Notebooks/data/img_features/imgfeature_1000_final.pkl"
     with open(image_file_training, 'rb') as f:
         image_features = pickle.load(f)
 
@@ -54,7 +56,10 @@ def main(fname=None):
     #questions={"image_id":[], "question_id":[], "questions":[]}
     #answers = {question_id":[], "multiple_choice_answer":[]} 
     print("Starting training of the VQA model ...")
+    loss_dict={}
+    loss_np=np.ndarray(shape=(epochs,num_batches,2))
     for epoch in range(epochs):        
+        loss_dict[epoch]={}
         for batch in range(0,num_batches):
             start_index = batch*batch_size
             stop_index = min(num_traning_ex, (batch+1)*batch_size)
@@ -62,7 +67,7 @@ def main(fname=None):
                 X_image, X_text, y = [], [], np.ndarray(shape=(stop_index-start_index, Constants.NUM_CLASSES))
             else:
                 X_image, X_text, y = [], [], np.ndarray(shape=(batch_size, Constants.NUM_CLASSES))
-            print(f'Training batch {batch} from {start_index}:{stop_index}')
+            print(f'Training batch {batch+1} from {start_index}:{stop_index}')
             for i in range(start_index, stop_index):
                 q_id = int(top_question_ids[i])
                 img_id = train_questions["image_id"][train_questions["question_id"].index(q_id)]
@@ -81,10 +86,21 @@ def main(fname=None):
             
             X_text=textObj.tokenize(X_text)
             loss = model.train_on_batch([X_image, X_text], y)
+            print(loss)
+            loss_np[epoch][batch][0]=loss[0]
+            loss_np[epoch][batch][1]=loss[1]
+            loss_dict[epoch][batch]=loss
+
         print("Completed training for epoch " + str(epoch) + "\n\n")
         save_model_name=loadedmodel + 'model_' + str(epoch) +'.h5'
         model.save(save_model_name)
+        save_epoch_name=loadedmodel + 'loss_' + str(epoch) +'_' + str(batch)
+        #pickle.dump(loss_dict,open(save_epoch_name,'wb'))
+        np.save(save_epoch_name,loss_np)
         print("Model saved for epoch: " + str(epoch))
+        print("Validation...")
+        prediction(model=model)
+
     model.save("final_model.h5")
 
 
