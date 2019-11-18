@@ -32,35 +32,44 @@ def prediction(fname=None,model=None):
     top_question_ids = top_train_answers["question_id"]
     print("All files loaded")
     
+    '''
     q_idlist=[]
     for q_id in test_questions["question_id"]:
         a_index = test_answers["question_id"].index(str(q_id))
         if  test_answers["multiple_choice_answer"][a_index] in top_answers:
             q_idlist.append(q_id)
             
-    print("Number of questions: " + str(len(q_idlist)))
-
+    
+    '''
     if model==None:
         model=load_saved_model(fname)
     i=0
     X_image, X_text , y=[],[],np.ndarray(shape=(len(test_questions["question_id"]), Constants.NUM_CLASSES))
     #for q_id in test_questions["question_id"]:
-    for q_id in q_idlist:
+    for q_id in test_questions["question_id"]:
         #q_id = q["question_id"]
-        img_id = test_questions["image_id"][test_questions["question_id"].index(q_id)]
-        image_feat_index = image_features[0][img_id]
-        X_image.append(image_features[1][image_feat_index])
-                
-        q_index = test_questions["question_id"].index(q_id)
-        X_text.append(test_questions["questions"][q_index])
-
-        y_i = np.zeros(Constants.NUM_CLASSES)
+        
         a_index = test_answers["question_id"].index(str(q_id))
-        class_i = top_answers.index(test_answers["multiple_choice_answer"][a_index])
-        y_i[class_i] = 1
-        y[i] = y_i
+        if  test_answers["multiple_choice_answer"][a_index] in top_answers:
+
+            img_id = test_questions["image_id"][test_questions["question_id"].index(q_id)]
+            image_feat_index = image_features[0][img_id]
+            X_image.append(image_features[1][image_feat_index])
+                
+            q_index = test_questions["question_id"].index(q_id)
+            X_text.append(test_questions["questions"][q_index])
+
+            y_i = np.zeros(Constants.NUM_CLASSES)
+            a_index = test_answers["question_id"].index(str(q_id))
+            class_i = top_answers.index(test_answers["multiple_choice_answer"][a_index])
+            y_i[class_i] = 1
+            y[i] = y_i
+            i+=1
+            #if i==2:
+            #    break
                 # y.append(y_i)
-            
+    print('Number of questions: ' + str(i))
+    y=y[0:i+1]        
     X_text=textObj.tokenize(X_text)
     print("Running prediction:")
     sol = model.predict([X_image, X_text])
