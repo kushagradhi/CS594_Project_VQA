@@ -1,6 +1,9 @@
 from collections import defaultdict
 from constants import Constants
 import numpy as np
+import matplotlib.pyplot as plt
+import time
+import os
 
 def get_n_frequent_answers(answers, to_keep=Constants.NUM_CLASSES):
     '''
@@ -50,4 +53,24 @@ def read_answers(filename):
 
     return answers
 
+def plot_loss_and_metrics(history, filename=None):
+    if filename is None:
+        filename = str(time.time()) + ".png"
+    elif str(a[-4:]) != ".png":
+        filename += ".png"
+        
+    fig, axes = plt.subplots(figsize=(18,6), nrows=1, ncols=2)
+    fig.tight_layout()
+    axes[0].plot([i+1 for i in range(len(history(0)))], history[0])
+    axes[0].set_xlabel('epoch')
+    axes[0].set_ylabel('loss')
+    axes[0].set_title('Loss')
+             
+    axes[1].plot([i+1 for i in range(len(history(1)))], history[1])
+    axes[1].set_xlabel('epoch')
+    axes[1].set_ylabel('acc')
+    axes[1].set_title('Accuracy')
+    
+    plt.savefig(os.path.join(Constants.DIRECTORIES["root"], filename))
+    # plt.show()
 
