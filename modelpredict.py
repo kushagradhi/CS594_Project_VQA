@@ -73,9 +73,12 @@ def prediction(fname=None,model=None):
     y=y[0:i]        
     X_text=textObj.tokenize(X_text)
     print("Running prediction:")
-    sol = model.predict([X_image, X_text])
-    give_stats(sol,y)
-    
+    sol = model.evaluate([X_image, X_text],y)
+    #acc=give_stats(sol,y)
+    print(sol)
+    return sol
+
+
 def give_stats(sol,y):
     ct=0.0
     s=sol.shape
@@ -85,7 +88,9 @@ def give_stats(sol,y):
         #print(sol[i][a_index[0]])
         if y[i][a_index[0]]==1:
             ct+=1
-    print("Accuracy : " + str(ct/s) )
+    acc=ct/s
+    print("Accuracy : " + str(acc) )
+    return acc
 
 if __name__=='__main__':
     # Give either fname or model

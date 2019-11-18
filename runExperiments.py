@@ -17,7 +17,7 @@ from modelpredict import prediction
 
 def main(fname=None):
     tf.logging.set_verbosity(tf.logging.FATAL)
-    epochs = 1
+    epochs = 150
     batch_size = 1000
 
     # load image features
@@ -58,6 +58,7 @@ def main(fname=None):
     print("Starting training of the VQA model ...")
     loss_dict={}
     loss_np=np.ndarray(shape=(epochs,num_batches,2))
+    acc_np=np.ndarray(shape=(epochs,2))
     for epoch in range(epochs):        
         loss_dict[epoch]={}
         for batch in range(0,num_batches):
@@ -99,8 +100,11 @@ def main(fname=None):
         np.save(save_epoch_name,loss_np)
         print("Model saved for epoch: " + str(epoch))
         print("Validation...")
-        prediction(model=model)
-
+        acc=prediction(model=model)
+        save_epoch_name=loadedmodel + 'VALACC_' + str(epoch) +'_' + str(batch)
+        acc_np[epoch][0]=acc[0]
+        acc_np[epoch][1]=acc[1]
+        np.save(save_epoch_name,acc_np)
     model.save("final_model.h5")
 
 
