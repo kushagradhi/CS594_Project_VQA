@@ -106,6 +106,8 @@ def main(fname=None):
         acc_np[epoch][1]=acc[1]
         np.save(save_epoch_name,acc_np)
     model.save("final_model.h5")
+    np.save('final_loss',loss_np)
+    np.save('final_val',acc_np)
 
 
 def load_saved_model(fname):
