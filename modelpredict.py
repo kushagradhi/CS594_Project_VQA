@@ -45,7 +45,7 @@ def prediction(fname=None,model=None):
     i=0
     X_image, X_text , y=[],[],np.ndarray(shape=(len(test_questions["question_id"]), Constants.NUM_CLASSES))
     #for q_id in test_questions["question_id"]:
-    for q_id in q_idlist[0:2]:
+    for q_id in q_idlist:
         #q_id = q["question_id"]
         img_id = test_questions["image_id"][test_questions["question_id"].index(q_id)]
         image_feat_index = image_features[0][img_id]
