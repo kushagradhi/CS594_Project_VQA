@@ -11,9 +11,16 @@ class Constants:
 
     '''
     DIRECTORIES = {
-        #"root": "D:\\CS\\DLNLP_Project\\data",
-        "root": "C:\SIM\MS CS\CS594_Deep_learning_in_NLP\Project\Run\data",
-        #"root": "drive/My Drive/Colab Notebooks/data",
+        # "root": "drive/My Drive/Colab Notebooks/data",
+        # "image_file_training": "drive/My Drive/Colab Notebooks/data/img_features/imgfeature_1000_final.pkl",
+
+        # "root": "C:\SIM\MS CS\CS594_Deep_learning_in_NLP\Project\Run\data",
+        # "image_file_training": "C:\SIM\MS CS\CS594_Deep_learning_in_NLP\Project\Run\data\img_features\\imgfeature_1000_final.pkl",
+
+
+        "root": "D:\\CS\\DLNLP_Project\\data",
+        "image_file_training": "D:\\CS\\DLNLP_Project\\data\\img_features\\imgfeature_1000_final.pkl",
+        
         
         ## Word Embeddings - Glove
         "glove_300": "glove.6B\\glove.6B.300d.txt",
@@ -42,6 +49,8 @@ class Constants:
 
     ## CONSTANTS
     GLOVE_EMBEDDING_DIM = 300
+    # GLOVE_EMBEDDING_DIM = 100
+    # GLOVE_EMBEDDING_DIM = 50
     
     ## Number of top answers to keep
     NUM_CLASSES = 1000

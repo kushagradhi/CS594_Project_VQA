@@ -1,7 +1,6 @@
 from extractTextFeatures import QuestionFeatures
 from constants import Constants
 from vqa_model import VQA
-import os
 import pickle
 import numpy as np
 import os
@@ -12,18 +11,17 @@ from tensorflow.keras import layers
 from keras.preprocessing.text import Tokenizer
 from utils import read_answers, get_n_frequent_answers
 from keras.models import load_model
-from modelpredict import prediction
+from modelpredict_pg import prediction
 
 
-def main(fname=None):
+def main(fname=None, last_epoch=-1):
+    start_from_epoch = last_epoch + 1
     tf.logging.set_verbosity(tf.logging.FATAL)
     epochs = 150
     batch_size = 1000
 
     # load image features
-    image_file_training = "C:\SIM\MS CS\CS594_Deep_learning_in_NLP\Project\Run\data\img_features\\imgfeature_1000_final.pkl"
-    #image_file_training = "D:\\CS\\DLNLP_Project\\data\\img_features\\imgfeature_1000_final.pkl"
-    #image_file_training = "drive/My Drive/Colab Notebooks/data/img_features/imgfeature_1000_final.pkl"
+    image_file_training = image_file_training = Constants.DIRECTORIES["image_file_training"]
     with open(image_file_training, 'rb') as f:
         image_features = pickle.load(f)
 
@@ -46,9 +44,17 @@ def main(fname=None):
     loadedmodel=""
     if fname==None:
         model = VQA().get_model_functional(embedding_matrix=word_embeddings, vocab_size=textObj.get_vocab_size())
+        loss_np = np.ndarray(shape=(epochs,num_batches,2))
+        acc_np = np.ndarray(shape=(epochs,2))
     else:
-        model=load_saved_model(fname)
-        loadedmodel='M'+fname.replace('.h5','').replace('model_','') + '_'
+        model = load_saved_model(fname)
+        loadedmodel = 'M'+fname.replace('.h5','').replace('model_','') + '_'
+
+        #replace with last saved metrics
+        loss_np = np.load("M0_loss_13_404.npy")
+        acc_np = np.load("M0_VALACC_13_404.npy")
+        
+        print(f'loadedm {loadedmodel}')
         print("Model loaded")
     
     #data description! ):
@@ -57,9 +63,7 @@ def main(fname=None):
     #answers = {question_id":[], "multiple_choice_answer":[]} 
     print("Starting training of the VQA model ...")
     loss_dict={}
-    loss_np=np.ndarray(shape=(epochs,num_batches,2))
-    acc_np=np.ndarray(shape=(epochs,2))
-    for epoch in range(epochs):        
+    for epoch in range(start_from_epoch, epochs):        
         loss_dict[epoch]={}
         for batch in range(0,num_batches):
             start_index = batch*batch_size
@@ -71,12 +75,12 @@ def main(fname=None):
             print(f'Training batch {batch+1} from {start_index}:{stop_index}')
             for i in range(start_index, stop_index):
                 q_id = int(top_question_ids[i])
-                img_id = train_questions["image_id"][train_questions["question_id"].index(q_id)]
+                index_in_questions = train_questions["question_id"].index(q_id)
+                img_id = train_questions["image_id"][index_in_questions]
                 image_feat_index = image_features[0][img_id]
                 X_image.append(image_features[1][image_feat_index])
                 
-                q_index = train_questions["question_id"].index(q_id)
-                X_text.append(train_questions["questions"][q_index])
+                X_text.append(train_questions["questions"][index_in_questions])
 
                 y_i = np.zeros(Constants.NUM_CLASSES)
                 a_index = top_train_answers["question_id"].index(str(q_id))
@@ -97,14 +101,14 @@ def main(fname=None):
         model.save(save_model_name)
         save_epoch_name=loadedmodel + 'loss_' + str(epoch) +'_' + str(batch)
         #pickle.dump(loss_dict,open(save_epoch_name,'wb'))
-        np.save(save_epoch_name,loss_np)
+        np.save(save_epoch_name, loss_np)
         print("Model saved for epoch: " + str(epoch))
         print("Validation...")
-        acc=prediction(model=model)
+        acc=prediction(model=model, mode='r')
         save_epoch_name=loadedmodel + 'VALACC_' + str(epoch) +'_' + str(batch)
         acc_np[epoch][0]=acc[0]
         acc_np[epoch][1]=acc[1]
-        np.save(save_epoch_name,acc_np)
+        np.save(save_epoch_name, acc_np)
     model.save("final_model.h5")
     np.save('final_loss',loss_np)
     np.save('final_val',acc_np)
@@ -115,9 +119,11 @@ def load_saved_model(fname):
     return m
 
 if __name__ == "__main__":
-    ## Parameter fname, if not specified training starts from scratch, otherwise it starts over the given the file
+    ## Parameter fname, last_epoch if not specified training starts from scratch, otherwise it starts over the given the file
+    ## also set last saved metric filenames
     #fname='model_0.h5'
-    main(fname=None)
+    # main()
+    main(fname="M0_model_13.h5", last_epoch=13)
 
         
 

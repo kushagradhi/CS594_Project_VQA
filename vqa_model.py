@@ -7,7 +7,7 @@ import tensorflow as tf
 
 class VQA():
 
-    def get_model(self, embedding_matrix, vocab_size, question_len=15, img_feat=2048, embed_dim=300, ):
+    def get_model(self, embedding_matrix, vocab_size, question_len=15, img_feat=2048, embed_dim=300):
         number_of_hidden_units_LSTM = 512
         number_of_dense_layers      = 3
         number_of_hidden_units      = 1024

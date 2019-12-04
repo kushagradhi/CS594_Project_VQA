@@ -16,7 +16,8 @@ class image_features:
         pass
 
     def get_data(self, filename):
-        data_directory=os.path.join('Datasets',filename)
+        # data_directory=os.path.join('Datasets',filename)
+        data_directory=os.path.join('D:\\CS\\DLNLP_Project\\data',filename)
         filelist=[]
         i=0
         for dir_, _, files in os.walk(data_directory):
@@ -84,17 +85,22 @@ class image_features:
             print("Prediction done in " + str(end))
             print(features[i * batch_size : min((i + 1) * batch_size,n), :])
             s='imgfeature_' + str(filename) + str(batch_size) + '_' + str(i) +'.pkl'
-            pickle.dump([imgname,features],open(s,'wb'))
+            # pickle.dump([imgname,features],open(s,'wb'))
+            pickle.dump([imgname,features],open(os.path.join('D:\\CS\\DLNLP_Project\\data', s),'wb'))
                 
         #print(features)
-        s='imgfeature_' + str(data_directory) + '_' + str(batch_size) + '_final.pkl'
-        pickle.dump([imgname,features],open(s,'wb'))
+        
+        # s='imgfeature_' + str(data_directory) + '_' + str(batch_size) + '_final.pkl'
+        # pickle.dump([imgname,features],open(s,'wb'))        
+        s='imgfeature_'+ str(filename) + str(batch_size) + '_final.pkl'
+        pickle.dump([imgname,features],open(os.path.join('D:\\CS\\DLNLP_Project\\data', s),'wb'))
+
         return imgname, features
 
 if __name__=='__main__':
-    config = tf.ConfigProto( device_count = {'GPU': 1 , 'CPU': 4} ) 
-    sess = tf.Session(config=config) 
-    keras.backend.set_session(sess)
+    # config = tf.ConfigProto( device_count = {'GPU': 1 , 'CPU': 4} ) 
+    # sess = tf.Session(config=config) 
+    # keras.backend.set_session(sess)
 
     '''Use the below to import features.. Call function get_feats with parameters modelname (rather, initial) and batch size
     Filepath for training images is set as Datasets/train2014
@@ -103,6 +109,6 @@ if __name__=='__main__':
     obj=image_features()
     modelname='R'  # R for Resnet, V for VGG16
     batch_size=1000 # Runs prediction on 'batch_size' number of features at a time.
-    filename='train2014' #--- Validation set: val2014, training: train2014, test: train2014
+    filename='train2014' #--- Validation set: val2014, training: train2014, test: test2015
     imgname, features=obj.get_feats(modelname,batch_size,filename)  # Creates files with features --- final one: imgfeature_batchsize_final.pkl
     

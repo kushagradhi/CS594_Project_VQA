@@ -27,5 +27,6 @@ class check_feats:
 if __name__=='__main__':
     obj=check_feats()
     ####--- Enter name of the file
-    obj.check_img_feats('imgfeature1000_19.pkl')
+    # obj.check_img_feats('imgfeature1000_19.pkl')
+    obj.check_img_feats('D:\\CS\\DLNLP_Project\\data\\imgfeature_test20151000_81.pkl')
     
