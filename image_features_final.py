@@ -109,6 +109,6 @@ if __name__=='__main__':
     obj=image_features()
     modelname='R'  # R for Resnet, V for VGG16
     batch_size=1000 # Runs prediction on 'batch_size' number of features at a time.
-    filename='train2014' #--- Validation set: val2014, training: train2014, test: test2015
+    filename='test2015' #--- Validation set: val2014, training: train2014, test: test2015
     imgname, features=obj.get_feats(modelname,batch_size,filename)  # Creates files with features --- final one: imgfeature_batchsize_final.pkl
     
