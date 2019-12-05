@@ -15,8 +15,14 @@ def get_n_frequent_answers(answers, to_keep=Constants.NUM_CLASSES):
     for answer in answers["multiple_choice_answer"]:
         answers_counts[answer] += 1
     top_answers = [a for a, v in sorted(answers_counts.items(), key=lambda x: x[1], reverse=True)][:to_keep]
-    # print(answers_counts)
-    # print(top_answers)
+    # top_answer_counts = {w:c for w, c in sorted(answers_counts.items(), key=lambda x: x[1], reverse=True)[:to_keep] }
+    # top=""
+    # for w,c in top_answer_counts.items():
+    #     for i in range(c):
+    #         top += w + "\n"
+    # with open("top_answers.txt", 'w') as f:
+    #     f.write(top)
+    # print(top_answer_counts)
     new_answers={"question_id":[], "multiple_choice_answer":[]}
     for i in range(len(answers["multiple_choice_answer"])):
         if answers["multiple_choice_answer"][i] in top_answers:
@@ -53,24 +59,43 @@ def read_answers(filename):
 
     return answers
 
-def plot_loss_and_metrics(history, filename=None):
+def plot_metrics(loss, acc, filename=None):
     if filename is None:
         filename = str(time.time()) + ".png"
-    elif str(a[-4:]) != ".png":
+    elif str(filename[-4:]) != ".png":
         filename += ".png"
         
     fig, axes = plt.subplots(figsize=(18,6), nrows=1, ncols=2)
     fig.tight_layout()
-    axes[0].plot([i+1 for i in range(len(history(0)))], history[0])
+    axes[0].plot([i+1 for i in range(len(loss[0]))], loss[0])
+    axes[0].plot([i+1 for i in range(len(loss[1]))], loss[1])
     axes[0].set_xlabel('epoch')
     axes[0].set_ylabel('loss')
     axes[0].set_title('Loss')
+    axes[0].legend(['train', 'val'], loc='upper right')
              
-    axes[1].plot([i+1 for i in range(len(history(1)))], history[1])
+    axes[1].plot([i+1 for i in range(len(acc[0]))], acc[0])
+    axes[1].plot([i+1 for i in range(len(acc[1]))], acc[1])
     axes[1].set_xlabel('epoch')
     axes[1].set_ylabel('acc')
     axes[1].set_title('Accuracy')
+    axes[1].legend(['train', 'val'], loc='lower right')
     
     plt.savefig(os.path.join(Constants.DIRECTORIES["root"], filename))
-    # plt.show()
+    plt.show()
 
+def draw():
+    tr = np.load("MM0_13_loss_14_404.npy")
+    val = np.load("MM0_13_VALACC_14_404.npy")
+
+    epochs = 14
+
+    loss, acc = np.ndarray(shape=(2,epochs)), np.ndarray(shape=(2,epochs))
+    for i in range(epochs):
+        loss[0][i] = tr[i][404][0]
+        loss[1][i] = val[i][0]
+
+        acc[0][i] = tr[i][404][1] * 100
+        acc[1][i] = val[i][1] * 100
+    
+    plot_metrics(loss, acc)

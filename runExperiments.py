@@ -12,9 +12,10 @@ from keras.preprocessing.text import Tokenizer
 from utils import read_answers, get_n_frequent_answers
 from keras.models import load_model
 from modelpredict_pg import prediction
+# import time
 
 
-def main(fname=None, last_epoch=-1):
+def main(last_epoch=-1, fname=None, filename_loss=None, filename_acc=None):
     start_from_epoch = last_epoch + 1
     tf.logging.set_verbosity(tf.logging.FATAL)
     epochs = 150
@@ -51,8 +52,8 @@ def main(fname=None, last_epoch=-1):
         loadedmodel = 'M'+fname.replace('.h5','').replace('model_','') + '_'
 
         #replace with last saved metrics
-        loss_np = np.load("M0_loss_13_404.npy")
-        acc_np = np.load("M0_VALACC_13_404.npy")
+        loss_np = np.load(filename_loss)
+        acc_np = np.load(filename_acc)
         
         print(f'loadedm {loadedmodel}')
         print("Model loaded")
@@ -63,7 +64,9 @@ def main(fname=None, last_epoch=-1):
     #answers = {question_id":[], "multiple_choice_answer":[]} 
     print("Starting training of the VQA model ...")
     loss_dict={}
-    for epoch in range(start_from_epoch, epochs):        
+    for epoch in range(start_from_epoch, epochs):
+        # if epoch%2==0:
+        #     time.sleep(300)        
         loss_dict[epoch]={}
         for batch in range(0,num_batches):
             start_index = batch*batch_size
@@ -123,7 +126,7 @@ if __name__ == "__main__":
     ## also set last saved metric filenames
     #fname='model_0.h5'
     # main()
-    main(fname="M0_model_13.h5", last_epoch=13)
+    main(last_epoch=19, fname="MM0_14_model_19.h5", filename_loss="MM0_14_loss_19_404", filename_acc="MM0_14_VALACC_19_404")
 
         
 
