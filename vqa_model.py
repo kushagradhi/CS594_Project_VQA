@@ -81,8 +81,8 @@ class VQA():
         # model.summary()     
         return model
 
-    def get_sketch_matrix(self, h, s,v,n=2048):
-        y=np.zeros(n)
+    def get_sketch_matrix(self, h, s,v,d,n=2048):
+        y=[0.0 for i in range(d)]
         for i in range(n):
             y[h[i]]+=s[i]*v[i]
         return y
@@ -93,8 +93,8 @@ class VQA():
         #sketch_v2 = tf.transpose(tf.sparse_tensor_dense_matmul(self.get_sketch_matrix(h_s[2], h_s[3]), v2, adjoint_a=True, adjoint_b=True))
 
 
-        sketch_v1 = self.get_sketch_matrix(h_s[0], h_s[1],v1)
-        sketch_v2 = self.get_sketch_matrix(h_s[2], h_s[3],v2)
+        sketch_v1 = self.get_sketch_matrix(h_s[0], h_s[1],v1,d)
+        sketch_v2 = self.get_sketch_matrix(h_s[2], h_s[3],v2,d)
 
         fft_1, fft_2 = tf.fft(sketch_v1), tf.fft(sketch_v2)
         fft_product = tf.multiply(fft_1, fft_2)
