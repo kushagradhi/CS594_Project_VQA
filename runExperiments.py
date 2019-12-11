@@ -15,7 +15,7 @@ from modelpredict_pg import prediction
 # import time
 
 
-def main(last_epoch=-1, fname=None, filename_loss=None, filename_acc=None):
+def main(last_epoch=-1, fname=None, filename_loss=None, filename_acc=None, mod_type='mcb'):
     start_from_epoch = last_epoch + 1
     tf.logging.set_verbosity(tf.logging.FATAL)
     epochs = 150
@@ -44,7 +44,12 @@ def main(last_epoch=-1, fname=None, filename_loss=None, filename_acc=None):
     print(f'len_top_100={len(top_answers)}, num_train_ex={len(top_train_answers["multiple_choice_answer"])}, num_batches={num_batches}')
     loadedmodel=""
     if fname==None:
-        model = VQA().get_model_functional(embedding_matrix=word_embeddings, vocab_size=textObj.get_vocab_size())
+        if mod_type=='mcb':
+            hs1=VQA().set_hs()
+            hs2=VQA().set_hs()
+            model=VQA().get_model_attention(embedding_matrix=word_embeddings, vocab_size=textObj.get_vocab_size(), h_s_img_text_1=hs1, h_s_img_text_2=hs2)
+        else:
+            model = VQA().get_model_functional(embedding_matrix=word_embeddings, vocab_size=textObj.get_vocab_size())
         loss_np = np.ndarray(shape=(epochs,num_batches,2))
         acc_np = np.ndarray(shape=(epochs,2))
     else:
@@ -126,7 +131,7 @@ if __name__ == "__main__":
     ## also set last saved metric filenames
     #fname='model_0.h5'
     # main()
-    main(last_epoch=19, fname="MM0_14_model_19.h5", filename_loss="MM0_14_loss_19_404", filename_acc="MM0_14_VALACC_19_404")
-
+    #main(last_epoch=19, fname="MM0_14_model_19.h5", filename_loss="MM0_14_loss_19_404", filename_acc="MM0_14_VALACC_19_404",mod_type='mcb')
+    main(mod_type='mcb')
         
 

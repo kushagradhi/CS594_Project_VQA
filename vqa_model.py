@@ -4,6 +4,7 @@ from keras.layers import LSTM, Dense, Embedding, Input, Concatenate, Flatten, La
 from keras.layers.merge import concatenate
 from constants import Constants
 import tensorflow as tf
+import numpy as np
 
 class VQA():
 
@@ -80,14 +81,20 @@ class VQA():
         # model.summary()     
         return model
 
-    def get_sketch_matrix(self, h, s):
-        
+    def get_sketch_matrix(self, h, s,v,n=2048):
+        y=np.zeros(n)
+        for i in range(n):
+            y[h[i]]+=s[i]*v[i]
         return y
-        pass     
+             
 
     def get_mcb_layer(self, v1, v2, h_s, d=128, n1=2048, n2=2048):
-        sketch_v1 = tf.transpose(tf.sparse_tensor_dense_matmul(self.get_sketch_matrix(h_s[0], h_s[1]), v1, adjoint_a=True, adjoint_b=True))
-        sketch_v2 = tf.transpose(tf.sparse_tensor_dense_matmul(self.get_sketch_matrix(h_s[2], h_s[3]), v2, adjoint_a=True, adjoint_b=True))
+        #sketch_v1 = tf.transpose(tf.sparse_tensor_dense_matmul(self.get_sketch_matrix(h_s[0], h_s[1]), v1, adjoint_a=True, adjoint_b=True))
+        #sketch_v2 = tf.transpose(tf.sparse_tensor_dense_matmul(self.get_sketch_matrix(h_s[2], h_s[3]), v2, adjoint_a=True, adjoint_b=True))
+
+
+        sketch_v1 = self.get_sketch_matrix(h_s[0], h_s[1],v1)
+        sketch_v2 = self.get_sketch_matrix(h_s[2], h_s[3],v2)
 
         fft_1, fft_2 = tf.fft(sketch_v1), tf.fft(sketch_v2)
         fft_product = tf.multiply(fft_1, fft_2)
@@ -96,7 +103,14 @@ class VQA():
         l2_norm = tf.keras.backend.l2_normalize(sgn_sqrt)
         return l2_norm 
 
-
+    def set_hs(self,d=128,n=2048):
+        s1=np.random.choice([-1,1],size=n)
+        h1=np.random.randint(low=0,high=d,size=n)
+        s2=np.random.choice([-1,1],size=n)
+        h2=np.random.randint(low=0,high=d,size=n)
+        print(s1)
+        print(h1)
+        return [h1,s1,h2,s2]
 
 
     def get_model_attention(self, embedding_matrix, vocab_size, h_s_img_text_1, h_s_img_text_2, hidden_units_LSTM=1024, question_len=15, img_feat=2048, embed_dim=300, ):
@@ -109,15 +123,15 @@ class VQA():
                                         weights=[embedding_matrix], trainable=False)(input_lang)
         output_lstm_1 = LSTM(units=hidden_units_LSTM, return_sequences=True, unroll=True)(output_embedding)
         output_lstm_2 = LSTM(units=hidden_units_LSTM, return_sequences=False, unroll=True)(output_lstm_1)
-        concatenated_lang_features = Concatenate()([output_lstm_1, output_lstm_2])
+        concatenated_lang_features = Concatenate()([output_lstm_1[:,-1,:], output_lstm_2])
 
-        mcb_1 = self.get_mcb_layer(v1=input_image, v2=concatenated_lang_features, h_s_img_text=h_s_img_text_1, 
+        mcb_1 = self.get_mcb_layer(v1=input_image, v2=concatenated_lang_features, h_s=h_s_img_text_1, 
                                 d=128, n1=2048, n2=2048)
         conv_1 = Conv1D(filters=1, kernel_size=32, activation='relu', padding='same')(mcb_1)
         conv_2 = Conv1D(filters=1, kernel_size=32, activation='softmax', padding='same')(conv_1)
-        weighted_sum = multiply(conv_2, input_image)
+        weighted_sum = multiply([conv_2, input_image])
 
-        mcb_2 = self.get_mcb_layer(v1=weighted_sum, v2=concatenated_lang_features, h_s_img_text=h_s_img_text_2, d=128,
+        mcb_2 = self.get_mcb_layer(v1=weighted_sum, v2=concatenated_lang_features, h_s=h_s_img_text_2, d=128,
                                     n1=2048, n2=2048)
         final_fc = Dense(Constants.NUM_CLASSES, activation="softmax")(mcb_2)
         model = Model(inputs=[input_image, input_lang], outputs=final_fc)
