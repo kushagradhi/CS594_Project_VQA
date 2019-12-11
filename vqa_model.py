@@ -6,6 +6,45 @@ from constants import Constants
 import tensorflow as tf
 import numpy as np
 
+class MyMCBLayer(tf.keras.layers.Layer):
+    def __init__(self, h_s, d=128, n1=2048, n2=2048):
+        super(MyMCBLayer, self).__init__()
+        self.h_s=h_s
+        self.d=d
+        self.n1=n1
+        self.n2=n2
+
+    def build(self, input_shape):
+        self.input_shape=input_shape
+
+    def call(self, input):
+        v1=input[0]
+        v2=input[1]
+        sketch_v1 = self.get_sketch_matrix(self.h_s[0], self.h_s[1],v1,self.d)
+        sketch_v2 = self.get_sketch_matrix(self.h_s[2], self.h_s[3],v2,self.d)
+
+        fft_1, fft_2 = tf.fft(sketch_v1), tf.fft(sketch_v2)
+        fft_product = tf.multiply(fft_1, fft_2)
+        inv_fft = tf.ifft(fft_product)
+        sgn_sqrt = tf.real(tf.sign(inv_fft)) * tf.sqrt(tf.abs(inv_fft))
+        l2_norm = tf.keras.backend.l2_normalize(sgn_sqrt)
+        return l2_norm 
+
+    def get_sketch_matrix(self, h, s,v,d,n=2048):
+        batch_size=tf.shape(v)[0]
+        #y=[0.0 for i in range(d)]
+        #y=[[0 for i in range(d)] for j in range(batch_size)]
+        y=np.zeros(shape=(batch_size,d))
+        for i in range(batch_size):
+          for j in range(n):
+              y[i,h[j]]+=s[j]*tf.keras.backend.get_value(v[i,j])
+        return y
+             
+
+    
+
+
+
 class VQA():
 
     def get_model(self, embedding_matrix, vocab_size, question_len=15, img_feat=2048, embed_dim=300):
@@ -81,28 +120,7 @@ class VQA():
         # model.summary()     
         return model
 
-    def get_sketch_matrix(self, h, s,v,d,n=2048):
-        y=[0.0 for i in range(d)]
-        for i in range(n):
-            y[h[i]]+=s[i]*v[i]
-        return y
-             
-
-    def get_mcb_layer(self, v1, v2, h_s, d=128, n1=2048, n2=2048):
-        #sketch_v1 = tf.transpose(tf.sparse_tensor_dense_matmul(self.get_sketch_matrix(h_s[0], h_s[1]), v1, adjoint_a=True, adjoint_b=True))
-        #sketch_v2 = tf.transpose(tf.sparse_tensor_dense_matmul(self.get_sketch_matrix(h_s[2], h_s[3]), v2, adjoint_a=True, adjoint_b=True))
-
-
-        sketch_v1 = self.get_sketch_matrix(h_s[0], h_s[1],v1,d)
-        sketch_v2 = self.get_sketch_matrix(h_s[2], h_s[3],v2,d)
-
-        fft_1, fft_2 = tf.fft(sketch_v1), tf.fft(sketch_v2)
-        fft_product = tf.multiply(fft_1, fft_2)
-        inv_fft = tf.ifft(fft_product)
-        sgn_sqrt = tf.sign(inv_fft) * tf.sqrt(tf.abs(inv_fft))
-        l2_norm = tf.keras.backend.l2_normalize(sgn_sqrt)
-        return l2_norm 
-
+    
     def set_hs(self,d=128,n=2048):
         s1=np.random.choice([-1,1],size=n)
         h1=np.random.randint(low=0,high=d,size=n)
@@ -125,14 +143,15 @@ class VQA():
         output_lstm_2 = LSTM(units=hidden_units_LSTM, return_sequences=False, unroll=True)(output_lstm_1)
         concatenated_lang_features = Concatenate()([output_lstm_1[:,-1,:], output_lstm_2])
 
-        mcb_1 = self.get_mcb_layer(v1=input_image, v2=concatenated_lang_features, h_s=h_s_img_text_1, 
-                                d=128, n1=2048, n2=2048)
+        #mcb_1 = self.get_mcb_layer(v1=input_image, v2=concatenated_lang_features, h_s=h_s_img_text_1, d=128, n1=2048, n2=2048)
+        mcb_1=MyMCBLayer(h_s=h_s_img_text_1, d=128, n1=2048, n2=2048)([input_image,concatenated_lang_features])
         conv_1 = Conv1D(filters=1, kernel_size=32, activation='relu', padding='same')(mcb_1)
         conv_2 = Conv1D(filters=1, kernel_size=32, activation='softmax', padding='same')(conv_1)
+
         weighted_sum = multiply([conv_2, input_image])
 
-        mcb_2 = self.get_mcb_layer(v1=weighted_sum, v2=concatenated_lang_features, h_s=h_s_img_text_2, d=128,
-                                    n1=2048, n2=2048)
+        #mcb_2 = self.get_mcb_layer(v1=weighted_sum, v2=concatenated_lang_features, h_s=h_s_img_text_2, d=128,n1=2048, n2=2048)
+        mcb_2=MyMCBLayer(h_s=h_s_img_text_2, d=128,n1=2048, n2=2048)([weighted_sum,concatenated_lang_features])
         final_fc = Dense(Constants.NUM_CLASSES, activation="softmax")(mcb_2)
         model = Model(inputs=[input_image, input_lang], outputs=final_fc)
         model.compile(loss="categorical_crossentropy", optimizer="rmsprop" , metrics=['accuracy'] )   
