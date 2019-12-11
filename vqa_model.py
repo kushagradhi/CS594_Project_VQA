@@ -30,15 +30,22 @@ class MyMCBLayer(tf.keras.layers.Layer):
         l2_norm = tf.keras.backend.l2_normalize(sgn_sqrt)
         return l2_norm 
 
-    def get_sketch_matrix(self, h, s,v,d,n=2048):
+   def get_sketch_matrix(self, h, s,v,d,n=2048):
         batch_size=v.get_shape().as_list()[0]
+        if batch_size==None:
+          batch_size=1
+          print("Batch size None")
         #y=[0.0 for i in range(d)]
         #y=[[0 for i in range(d)] for j in range(batch_size)]
         y=np.zeros(shape=(batch_size,d))
         for i in range(batch_size):
           for j in range(n):
-              y[i,h[j]]+=s[j]*tf.keras.backend.get_value(v[i,j])
+              if batch_size==1:
+                y[i,h[j]]=0.0
+              else:
+                y[i,h[j]]+=s[j]*tf.keras.backend.get_value(v[i,j])
         return y
+             
              
 
     
