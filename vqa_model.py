@@ -1,7 +1,7 @@
-from keras.models import Sequential, Model
-from keras.layers.core import Reshape, Activation, Dropout
-from keras.layers import LSTM, Dense, Embedding, Input, Concatenate, Flatten, Lambda, Conv1D, multiply
-from keras.layers.merge import concatenate
+from tensorflow.python.keras.models import Sequential, Model
+from tensorflow.python.keras.layers.core import Reshape, Activation, Dropout
+from tensorflow.python.keras.layers import LSTM, Dense, Embedding, Input, Concatenate, Flatten, Lambda, Conv1D, multiply
+from tensorflow.python.keras.layers.merge import concatenate
 from constants import Constants
 import tensorflow as tf
 import numpy as np
@@ -16,6 +16,7 @@ class MyMCBLayer(tf.keras.layers.Layer):
 
     def build(self, input_shape):
         self.input_shape=input_shape
+        # pass
 
     def call(self, input):
         v1=input[0]
@@ -30,7 +31,7 @@ class MyMCBLayer(tf.keras.layers.Layer):
         l2_norm = tf.keras.backend.l2_normalize(sgn_sqrt)
         return l2_norm 
 
-   def get_sketch_matrix(self, h, s,v,d,n=2048):
+    def get_sketch_matrix(self, h, s,v,d,n=2048):
         batch_size=v.get_shape().as_list()[0]
         if batch_size==None:
           batch_size=1
@@ -151,18 +152,19 @@ class VQA():
         concatenated_lang_features = Concatenate()([output_lstm_1[:,-1,:], output_lstm_2])
 
         #mcb_1 = self.get_mcb_layer(v1=input_image, v2=concatenated_lang_features, h_s=h_s_img_text_1, d=128, n1=2048, n2=2048)
-        mcb_1=MyMCBLayer(h_s=h_s_img_text_1, d=128, n1=2048, n2=2048)([input_image,concatenated_lang_features])
-        conv_1 = Conv1D(filters=1, kernel_size=32, activation='relu', padding='same')(mcb_1)
-        conv_2 = Conv1D(filters=1, kernel_size=32, activation='softmax', padding='same')(conv_1)
+        mcb_1 = MyMCBLayer(h_s=h_s_img_text_1, d=128, n1=2048, n2=2048)([input_image, concatenated_lang_features])
+        # conv_1 = Conv1D(filters=1, kernel_size=32, activation='relu', padding='same')(mcb_1)
+        # conv_2 = Conv1D(filters=1, kernel_size=32, activation='softmax', padding='same')(conv_1)
+        weights = Dense(img_feat, activation="softmax")(mcb_1)
 
-        weighted_sum = multiply([conv_2, input_image])
-
+        weighted_sum = multiply([weights, input_image])
+        
         #mcb_2 = self.get_mcb_layer(v1=weighted_sum, v2=concatenated_lang_features, h_s=h_s_img_text_2, d=128,n1=2048, n2=2048)
-        mcb_2=MyMCBLayer(h_s=h_s_img_text_2, d=128,n1=2048, n2=2048)([weighted_sum,concatenated_lang_features])
+        mcb_2 = MyMCBLayer(h_s=h_s_img_text_2, d=128,n1=2048, n2=2048)([weighted_sum, concatenated_lang_features])
         final_fc = Dense(Constants.NUM_CLASSES, activation="softmax")(mcb_2)
         model = Model(inputs=[input_image, input_lang], outputs=final_fc)
         model.compile(loss="categorical_crossentropy", optimizer="rmsprop" , metrics=['accuracy'] )   
-        # model.summary()     
+        model.summary()     
         return model           
 
 
