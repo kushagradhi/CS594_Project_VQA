@@ -31,7 +31,7 @@ class MyMCBLayer(tf.keras.layers.Layer):
         return l2_norm 
 
     def get_sketch_matrix(self, h, s,v,d,n=2048):
-        batch_size=tf.shape(v)[0]
+        batch_size=v.get_shape().as_list()[0]
         #y=[0.0 for i in range(d)]
         #y=[[0 for i in range(d)] for j in range(batch_size)]
         y=np.zeros(shape=(batch_size,d))
