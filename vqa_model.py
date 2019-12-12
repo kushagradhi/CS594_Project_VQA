@@ -172,7 +172,47 @@ class VQA():
 
 
 
+    def get_model_cnn_attention(self, embedding_matrix, vocab_size, hidden_units=1024, question_len=15, embed_dim=300, img_dims=[224,224,3]):
+        number_of_dense_layers      = 2
+        number_of_hidden_units      = 1024
+        activation_function         = 'tanh'
+        dropout_pct                 = 0.5
+        
+        # input_image = Input(shape=(img_dims[0], img_dims[1], img_dims[2]))
+        
+        conv2d_1 = Conv2D(32, (3, 3), activation='relu')(input_image)
+        max_pool2d_1 = MaxPooling2D((2,2))(conv2d_1)
+        conv2d_2 = Conv2D(64, (3, 3), activation='relu')(max_pool2d_1)
+        max_pool2d_2 = MaxPooling2D((2,2))(conv2d_2)
+        print(max_pool2d_2)
+        reshaped_img = Reshape((-1,128))(max_pool2d_2)
+        
+        input_lang = Input(shape=(question_len,))
+        output_embedding = Embedding(vocab_size, embedding_matrix.shape[1], input_length=question_len,
+                                        weights=[embedding_matrix], trainable=False)(input_lang)
+        output_lstm_1 = LSTM(units=hidden_units, return_sequences=True, unroll=True)(output_embedding)
+        output_lstm_2 = LSTM(units=hidden_units, return_sequences=False, unroll=True)(output_lstm_1)
+        reshaped_lstm = Reshape((-1,128))(output_lstm_2)
+        print(f'{reshaped_img}\n{output_lstm_2}')
 
+        attentive_img = Attention()([reshaped_lstm, reshaped_img])
+        print(attentive_img)
+        flattened_attn_img = Reshape((1024,))(attentive_img)
+        merged = Concatenate()([flattened_attn_img, output_lstm_2])
+
+        dense_layers, activation_layers, dropout_layers = [], [], []
+
+        for i in range(number_of_dense_layers):
+            if i is 0:
+                dense_layers.append(Dense(number_of_hidden_units, kernel_initializer='uniform', activation=activation_function)(merged))
+            else:
+                dense_layers.append(Dense(number_of_hidden_units, kernel_initializer='uniform', activation=activation_function)(dropout_layers[-1]))
+            dropout_layers.append(Dropout(dropout_pct)(dense_layers[i]))
+        final_dense = Dense(1000, activation="softmax")(dropout_layers[-1])
+        model = Model(inputs=[input_image, input_lang], outputs=final_dense)
+        model.compile(loss="categorical_crossentropy", optimizer="rmsprop" , metrics=['accuracy'] )
+        model.summary()     
+        return model
 
 
 
