@@ -14,9 +14,9 @@ class MyMCBLayer(tf.keras.layers.Layer):
         self.n1=n1
         self.n2=n2
 
-    def build(self, input_shape):
-        self.input_shape=input_shape
-        # pass
+    def compute_mask(self, input, input_mask=None):
+        return [None, None]
+
 
     def call(self, input):
         v1=input[0]
@@ -25,9 +25,9 @@ class MyMCBLayer(tf.keras.layers.Layer):
         sketch_v2 = self.get_sketch_matrix(self.h_s[2], self.h_s[3],v2,self.d)
 
         fft_1, fft_2 = tf.fft(sketch_v1), tf.fft(sketch_v2)
-        fft_product = tf.multiply(fft_1, fft_2)
+        fft_product = multiply([fft_1, fft_2])
         inv_fft = tf.ifft(fft_product)
-        sgn_sqrt = tf.real(tf.sign(inv_fft)) * tf.sqrt(tf.abs(inv_fft))
+        sgn_sqrt = multiply([tf.real(tf.sign(inv_fft)), tf.sqrt(tf.abs(inv_fft))])
         l2_norm = tf.keras.backend.l2_normalize(sgn_sqrt)
         return l2_norm 
 
@@ -44,7 +44,7 @@ class MyMCBLayer(tf.keras.layers.Layer):
               if batch_size==1:
                 y[i,h[j]]=0.0
               else:
-                y[i,h[j]]+=s[j]*tf.keras.backend.get_value(v[i,j])
+                y[i,h[j]]=tf.add(y[i,h[j]],multiply(s[j],tf.keras.backend.get_value(v[i,j])))
         return y
              
              
@@ -147,8 +147,11 @@ class VQA():
         input_lang = Input(shape=(question_len,))
         output_embedding = Embedding(vocab_size, embedding_matrix.shape[1], input_length=question_len,
                                         weights=[embedding_matrix], trainable=False)(input_lang)
-        output_lstm_1 = LSTM(units=hidden_units_LSTM, return_sequences=True, unroll=True)(output_embedding)
-        output_lstm_2 = LSTM(units=hidden_units_LSTM, return_sequences=False, unroll=True)(output_lstm_1)
+        print("Embedding done")
+        output_lstm_1 = LSTM(units=hidden_units_LSTM, return_sequences=True, unroll=True, name='lstm1')(output_embedding)
+        print("LSTM 1 done")
+        output_lstm_2 = LSTM(units=hidden_units_LSTM, return_sequences=False, unroll=True, name='lstm2')(output_lstm_1)
+        print("LSTM 2")
         concatenated_lang_features = Concatenate()([output_lstm_1[:,-1,:], output_lstm_2])
 
         #mcb_1 = self.get_mcb_layer(v1=input_image, v2=concatenated_lang_features, h_s=h_s_img_text_1, d=128, n1=2048, n2=2048)
