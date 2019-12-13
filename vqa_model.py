@@ -1,6 +1,6 @@
 from tensorflow.python.keras.models import Sequential, Model
 from tensorflow.python.keras.layers.core import Reshape, Activation, Dropout
-from tensorflow.python.keras.layers import LSTM, Dense, Embedding, Input, Concatenate, Flatten, Lambda, Conv1D, multiply
+from tensorflow.python.keras.layers import LSTM, Dense, Embedding, Input, Concatenate, Flatten, Lambda, Conv1D, multiply, Conv2D, Attention, MaxPooling2D
 from tensorflow.python.keras.layers.merge import concatenate
 from constants import Constants
 import tensorflow as tf
@@ -178,13 +178,13 @@ class VQA():
         activation_function         = 'tanh'
         dropout_pct                 = 0.5
         
-        # input_image = Input(shape=(img_dims[0], img_dims[1], img_dims[2]))
+        input_image = Input(shape=(img_dims[0], img_dims[1], img_dims[2]))
         
         conv2d_1 = Conv2D(32, (3, 3), activation='relu')(input_image)
         max_pool2d_1 = MaxPooling2D((2,2))(conv2d_1)
         conv2d_2 = Conv2D(64, (3, 3), activation='relu')(max_pool2d_1)
         max_pool2d_2 = MaxPooling2D((2,2))(conv2d_2)
-        print(max_pool2d_2)
+        # print(max_pool2d_2)
         reshaped_img = Reshape((-1,128))(max_pool2d_2)
         
         input_lang = Input(shape=(question_len,))
@@ -193,14 +193,14 @@ class VQA():
         output_lstm_1 = LSTM(units=hidden_units, return_sequences=True, unroll=True)(output_embedding)
         output_lstm_2 = LSTM(units=hidden_units, return_sequences=False, unroll=True)(output_lstm_1)
         reshaped_lstm = Reshape((-1,128))(output_lstm_2)
-        print(f'{reshaped_img}\n{output_lstm_2}')
+        # print(f'{reshaped_img}\n{output_lstm_2}')
 
         attentive_img = Attention()([reshaped_lstm, reshaped_img])
-        print(attentive_img)
+        # print(attentive_img)
         flattened_attn_img = Reshape((1024,))(attentive_img)
         merged = Concatenate()([flattened_attn_img, output_lstm_2])
 
-        dense_layers, activation_layers, dropout_layers = [], [], []
+        dense_layers, dropout_layers = [], []
 
         for i in range(number_of_dense_layers):
             if i is 0:
