@@ -48,6 +48,8 @@ def main(last_epoch=-1, fname=None, filename_loss=None, filename_acc=None, mod_t
             hs1=VQA().set_hs()
             hs2=VQA().set_hs()
             model=VQA().get_model_attention(embedding_matrix=word_embeddings, vocab_size=textObj.get_vocab_size(), h_s_img_text_1=hs1, h_s_img_text_2=hs2)
+        elif mod_type=='gru':
+            model=VQA().get_model_functional_gru(embedding_matrix=word_embeddings, vocab_size=textObj.get_vocab_size())
         else:
             model = VQA().get_model_functional(embedding_matrix=word_embeddings, vocab_size=textObj.get_vocab_size())
         loss_np = np.ndarray(shape=(epochs,num_batches,2))
@@ -132,6 +134,7 @@ if __name__ == "__main__":
     #fname='model_0.h5'
     # main()
     #main(last_epoch=19, fname="MM0_14_model_19.h5", filename_loss="MM0_14_loss_19_404", filename_acc="MM0_14_VALACC_19_404",mod_type='mcb')
-    main(mod_type='mcb')
+    #mod_type='gru'
+    main(mod_type='gru')
         
 

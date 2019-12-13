@@ -1,6 +1,6 @@
 from tensorflow.python.keras.models import Sequential, Model
 from tensorflow.python.keras.layers.core import Reshape, Activation, Dropout
-from tensorflow.python.keras.layers import LSTM, Dense, Embedding, Input, Concatenate, Flatten, Lambda, Conv1D, multiply, Conv2D, Attention, MaxPooling2D
+from tensorflow.python.keras.layers import GRU, LSTM, Dense, Embedding, Input, Concatenate, Flatten, Lambda, Conv1D, multiply, Conv2D, Attention, MaxPooling2D
 from tensorflow.python.keras.layers.merge import concatenate
 from constants import Constants
 import tensorflow as tf
@@ -214,6 +214,43 @@ class VQA():
         model.summary()     
         return model
 
+    def get_model_functional_gru(self, embedding_matrix, vocab_size, hidden_units=16, question_len=15, img_feat=2048, embed_dim=300):
+        number_of_hidden_units_LSTM = 512
+        number_of_dense_layers      = 3
+        number_of_hidden_units      = 1024
+        activation_function         = 'tanh'
+        dropout_pct                 = 0.5
+
+        # Image model - loading image features and reshaping
+        input_image = Input(shape=(img_feat,))
+
+        # Language Model - 3 LSTMs
+        input_lang = Input(shape=(question_len,))
+        output_embedding = Embedding(vocab_size, embedding_matrix.shape[1], input_length=question_len,
+                                        weights=[embedding_matrix], trainable=False)(input_lang)
+        #output_lstm_1 = LSTM(units=hidden_units, return_sequences=True, unroll=True)(output_embedding)
+        #output_lstm_2 = LSTM(units=hidden_units, return_sequences=True, unroll=True)(output_lstm_1)
+        output_gru_3 = GRU(units=hidden_units)(output_embedding)
+
+
+        # combined model
+        merged = Concatenate()([input_image, output_gru_3])
+
+        dense_layers, activation_layers, dropout_layers = [], [], []
+
+        for i in range(number_of_dense_layers):
+            if i is 0:
+                dense_layers.append(Dense(number_of_hidden_units, kernel_initializer='uniform')(merged))
+            else:
+                dense_layers.append(Dense(number_of_hidden_units, kernel_initializer='uniform')(dropout_layers[-1]))
+            activation_layers.append(Activation(activation_function)(dense_layers[i]))
+            dropout_layers.append(Dropout(dropout_pct)(activation_layers[i]))
+        
+        final_dense = Dense(Constants.NUM_CLASSES, activation="softmax")(dropout_layers[-1])
+        model = Model(inputs=[input_image, input_lang], outputs=final_dense)
+        model.compile(loss="categorical_crossentropy", optimizer="rmsprop" , metrics=['accuracy'] )#   tf.keras.losses.CategoricalCrossentropy()
+        # model.summary()     
+        return model
 
 
 
