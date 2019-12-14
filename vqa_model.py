@@ -184,7 +184,6 @@ class VQA():
         max_pool2d_1 = MaxPooling2D((2,2))(conv2d_1)
         conv2d_2 = Conv2D(64, (3, 3), activation='relu')(max_pool2d_1)
         max_pool2d_2 = MaxPooling2D((2,2))(conv2d_2)
-        # print(max_pool2d_2)
         reshaped_img = Reshape((-1,128))(max_pool2d_2)
         
         input_lang = Input(shape=(question_len,))
@@ -193,10 +192,8 @@ class VQA():
         output_lstm_1 = LSTM(units=hidden_units, return_sequences=True, unroll=True)(output_embedding)
         output_lstm_2 = LSTM(units=hidden_units, return_sequences=False, unroll=True)(output_lstm_1)
         reshaped_lstm = Reshape((-1,128))(output_lstm_2)
-        # print(f'{reshaped_img}\n{output_lstm_2}')
 
         attentive_img = Attention()([reshaped_lstm, reshaped_img])
-        # print(attentive_img)
         flattened_attn_img = Reshape((1024,))(attentive_img)
         merged = Concatenate()([flattened_attn_img, output_lstm_2])
 

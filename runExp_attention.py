@@ -24,6 +24,55 @@ def get_images_for_batch(root_dir, image_ids, prefix="COCO_train2014_000000"):
         images[idx,:,:,:] = img
     return images
 
+def run_validation(model, textObj, mode='not_r', batch_size = 64):
+    
+    if mode is 'r':
+        print("Reading saved values...")
+        X_image_ids = np.load("X_image_ids_val.npy")
+        X_text = np.load("X_text_val.npy")
+        y = np.load("y_val.npy")
+        num_val_ex = X_image_ids.shape[0]
+        print(f'{X_image_ids.shape}  {X_text.shape}  {y.shape}')
+    elif mode is 'not_r':
+        image_ids_for_top_val_answers = []
+        val_questions = textObj.get_questions(os.path.join(Constants.DIRECTORIES["root"], Constants.DIRECTORIES["validation_questions"])) 
+        val_answers = read_answers(os.path.join(Constants.DIRECTORIES["root"], "v2_mscoco_val2014_annotations.txt"))
+        
+        train_answers = read_answers(os.path.join(Constants.DIRECTORIES["root"], "v2_mscoco_train2014_annotations.txt"))
+        top_train_answers, top_answers = get_n_frequent_answers(train_answers)        
+        top_val_answers = {"question_id":[], "multiple_choice_answer":[]} 
+
+        for i in range(len(val_answers["multiple_choice_answer"])):
+            if val_answers["multiple_choice_answer"][i] in top_answers:
+                top_val_answers["question_id"].append(val_answers["question_id"][i])
+                top_val_answers["multiple_choice_answer"].append(val_answers["multiple_choice_answer"][i])
+        print(f'{len(top_train_answers["question_id"])} {len(top_answers)}')
+        print(f'{len(val_answers["question_id"])}   {len(top_val_answers["question_id"])}')
+        num_val_ex = len(top_val_answers["multiple_choice_answer"])
+        
+        for i in range(num_val_ex):
+            q_id = int(top_val_answers["question_id"][i])
+            index_in_questions = val_questions["question_id"].index(q_id)
+            img_id = val_questions["image_id"][index_in_questions]
+            image_ids_for_top_val_answers.append(img_id)
+        print(f'Images with answers in top_answers: {image_ids_for_top_val_answers}')
+        X_image_ids = np.asarray(image_ids_for_top_val_answers)
+        np.save("X_image_ids_val", X_image_ids)
+    num_batches = int(num_val_ex / batch_size) + 1
+    print(f'running validation for batch:')
+    for batch in range(0, num_batches):
+        print(batch)        
+        start_index = batch*batch_size
+        stop_index = min(num_val_ex, (batch+1)*batch_size)
+        print(f'Evaluating batch {batch} from {start_index}:{stop_index}')   
+        X_image = get_images_for_batch(root_dir=os.path.join(Constants.DIRECTORIES["root"], "val2014"), 
+                            image_ids=X_image_ids[start_index:stop_index], prefix="COCO_val2014_000000")
+        loss = model.test_on_batch([X_image, X_text[start_index:stop_index]], y[start_index:stop_index], reset_metrics=False)
+    print(f'val_metrics {loss}\n\n')
+    return loss
+
+
+
 def run_exp(last_epoch=-1, fname=None, filename_loss=None, filename_acc=None):
     start_from_epoch = last_epoch + 1
     epochs = 150
@@ -94,17 +143,19 @@ def run_exp(last_epoch=-1, fname=None, filename_loss=None, filename_acc=None):
             loss_np[epoch][batch][0]=loss[0]
             loss_np[epoch][batch][1]=loss[1]
         print("Completed training for epoch " + str(epoch) + "\n\n")
-        save_model_name=loadedmodel + 'attn_model_' + str(epoch) +'.h5'
-        model.save(save_model_name)
+        save_model_name = loadedmodel + 'attn_model_weights' + str(epoch) +'.h5'
+        # tf.keras.models.save_model(model, save_model_name, overwrite=True) 
+        model.save_weights("attn_weights_ep_"+str(epoch))
         save_epoch_name=loadedmodel + 'attn_loss_' + str(epoch) +'_' + str(batch)
         np.save(save_epoch_name, loss_np)
         print("Model saved for epoch: " + str(epoch))
-        # print("Validation...")
-        # acc = predict_attn(model=model)
-        # save_epoch_name=loadedmodel + 'attn_VALACC_' + str(epoch) +'_' + str(batch)
-        # acc_np[epoch][0]=acc[0]
-        # acc_np[epoch][1]=acc[1]
-        # np.save(save_epoch_name, acc_np)
+        print("Validation...")
+        val_mode = 'not_r' if epoch is 0 else 'r'
+        acc = run_validation(model=model, textObj=textObj, mode=val_mode)
+        save_epoch_name=loadedmodel + 'attn_VALACC_' + str(epoch) +'_' + str(batch)
+        acc_np[epoch][0]=acc[0]
+        acc_np[epoch][1]=acc[1]
+        np.save(save_epoch_name, acc_np)
     model.save("final_attn_model.h5")
     np.save('final_attn_loss',loss_np)
     np.save('final_attn_val',acc_np)
